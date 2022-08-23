@@ -2,8 +2,6 @@ package ru.practicum.shareit.user;
 
 import ru.practicum.shareit.user.dto.UserDto;
 
-import static ru.practicum.shareit.IdGenerator.generateUserId;
-
 public class UserMapper {
     public static UserDto toUserDto(User user) {
         return new UserDto(
@@ -15,7 +13,15 @@ public class UserMapper {
 
     public static User toUser(UserDto userDto) {
         return new User(
-                generateUserId(),
+                0,
+                userDto.getName(),
+                userDto.getEmail()
+        );
+    }
+
+    public static User updateUser(UserDto userDto, long userId) {
+        return new User(
+                userId,
                 userDto.getName(),
                 userDto.getEmail()
         );
