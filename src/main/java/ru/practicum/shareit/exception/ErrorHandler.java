@@ -28,7 +28,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleAddressException(final AddressException e) {
+    public ErrorResponse handleUserAlreadyExistsException(final UserAlreadyExistsException e) {
         return new ErrorResponse("Конфликт с почтой.", e.getMessage());
     }
 }
