@@ -4,10 +4,6 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-/**
- * // TODO .
- */
-
 @Data
 public class Booking {
     private long id;
