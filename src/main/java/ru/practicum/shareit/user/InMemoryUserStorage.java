@@ -1,80 +1,75 @@
 package ru.practicum.shareit.user;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.exception.AddressException;
-import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.UserAlreadyExistsException;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static ru.practicum.shareit.user.UserMapper.toUser;
-import static ru.practicum.shareit.user.UserMapper.toUserDto;
+import static ru.practicum.shareit.IdGenerator.generateUserId;
 
 @Slf4j
 @Component
 public class InMemoryUserStorage implements UserStorage {
-    @Getter
     private static final Map<Long, User> users = new HashMap<>();
 
-    @Override
-    public UserDto getUserById(long id) {
-        return toUserDto(users.get(id));
+    public static Map<Long, User> getUsers() {
+        return new HashMap(users);
     }
 
     @Override
-    public Collection<UserDto> getAllUsers() {
-        Collection<UserDto> usersDto = new ArrayList<>();
-        for (User user : users.values()) {
-            usersDto.add(toUserDto(user));
-        }
-        return usersDto;
+    public User getUserById(long id) {
+        checkExist(id);
+        return users.get(id);
     }
 
     @Override
-    public UserDto addUser(UserDto userDto) {
-        checkUserEmailUnique(userDto.getEmail());
-        User user = toUser(userDto);
+    public Collection<User> getAllUsers() {
+        return users.values();
+    }
+
+    @Override
+    public User addUser(User user) {
+        checkUserEmailUnique(user.getEmail());
+        user.setId(generateUserId());
         users.put(user.getId(), user);
         return getUserById(user.getId());
     }
 
     @Override
-    public UserDto updateUser(UserDto userDto) {
-        User user = users.get(userDto.getId());
-        if (userDto.getName() != null) {
-            user.setName(userDto.getName());
+    public User updateUser(User user) {
+        User updateUser = users.get(user.getId());
+        if (user.getName() != null) {
+            updateUser.setName(user.getName());
         }
-        if (userDto.getEmail() != null) {
-            checkUserEmailUnique(userDto.getEmail());
-            user.setEmail(userDto.getEmail());
+        if (user.getEmail() != null) {
+            checkUserEmailUnique(user.getEmail());
+            updateUser.setEmail(user.getEmail());
         }
         return getUserById(user.getId());
     }
 
     @Override
     public void deleteUserById(long id) {
+        checkExist(id);
         users.remove(id);
     }
 
-    @Override
-    public boolean isExistById(long id) {
-        return users.containsKey(id);
+    private void checkExist(long id) {
+        if (!users.containsKey(id)) {
+            log.warn("User with id: {} doesn't exist!", id);
+            throw new NotFoundException(String.format("User with id: %d doesn't exist!", id));
+        }
     }
 
     private void checkUserEmailUnique(String email) {
-        boolean emailSame = false;
-        for (User u : users.values()) {
-            if (email.equals(u.getEmail())) {
-                emailSame = true;
-            }
-        }
-        if (emailSame) {
+        boolean userAlreadyExists = users.values().stream().anyMatch(user -> email.equals(user.getEmail()));
+        if (userAlreadyExists) {
             log.warn("Email duplicate {}", email);
-            throw new AddressException("Email duplicate " + email);
+            throw new UserAlreadyExistsException("Email duplicate " + email);
         }
     }
 }

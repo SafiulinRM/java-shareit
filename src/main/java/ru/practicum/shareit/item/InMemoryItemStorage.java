@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.InMemoryUserStorage;
 
@@ -13,8 +12,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static ru.practicum.shareit.item.ItemMapper.toItem;
-import static ru.practicum.shareit.item.ItemMapper.toItemDto;
+import static java.util.stream.Collectors.toList;
+import static ru.practicum.shareit.IdGenerator.generateItemId;
 
 @Slf4j
 @Component
@@ -23,51 +22,49 @@ public class InMemoryItemStorage implements ItemStorage {
     private final Map<Long, Item> items = new HashMap<>();
 
     @Override
-    public ItemDto addItem(ItemDto itemDto, long ownerId) {
-        if (!InMemoryUserStorage.getUsers().containsKey(ownerId)) {
-            log.warn("User with id: {} not found!", ownerId);
-            throw new NotFoundException("User with id: " + ownerId + " not found!");
+    public Item addItem(Item item) {
+        if (!InMemoryUserStorage.getUsers().containsKey(item.getOwner())) {
+            log.warn("User with id: {} not found!", item.getOwner());
+            throw new NotFoundException("User with id: " + item.getOwner() + " not found!");
         }
-        Item item = toItem(itemDto, ownerId);
+        item.setId(generateItemId());
         items.put(item.getId(), item);
         return getItemById(item.getId());
     }
 
     @Override
-    public ItemDto updateItem(ItemDto itemDto, long ownerId) {
-        checkOwner(itemDto, ownerId);
-        Item item = items.get(itemDto.getId());
-        if (itemDto.getName() != null) {
-            item.setName(itemDto.getName());
+    public Item updateItem(Item item) {
+        checkOwner(item);
+        Item updateItem = items.get(item.getId());
+        if (item.getName() != null) {
+            updateItem.setName(item.getName());
         }
-        if (itemDto.getDescription() != null) {
-            item.setDescription(itemDto.getDescription());
+        if (item.getDescription() != null) {
+            updateItem.setDescription(item.getDescription());
         }
-        if (itemDto.getAvailable() != null) {
-            item.setAvailable(itemDto.getAvailable());
+        if (item.getAvailable() != null) {
+            updateItem.setAvailable(item.getAvailable());
         }
         return getItemById(item.getId());
     }
 
     @Override
-    public ItemDto getItemById(long itemId) {
-        return toItemDto(items.get(itemId));
-    }
-
-    @Override
-    public Collection<ItemDto> getItemsOfOwner(long ownerId) {
-        Collection<ItemDto> itemsOfOwner = new ArrayList<>();
-        for (Item item : items.values()) {
-            if (item.getOwner() == ownerId) {
-                itemsOfOwner.add(toItemDto(item));
-            }
+    public Item getItemById(long itemId) {
+        if (!items.containsKey(itemId)) {
+            log.warn("Item with id: {} doesn't exist!", itemId);
+            throw new NotFoundException(String.format("Item with id: %d doesn't exist!", itemId));
         }
-        return itemsOfOwner;
+        return items.get(itemId);
     }
 
     @Override
-    public Collection<ItemDto> getRequestedItems(String text) {
-        Collection<ItemDto> requestedItems = new ArrayList<>();
+    public Collection<Item> getItemsOfOwner(long ownerId) {
+        return items.values().stream().filter(it -> it.getOwner() == ownerId).collect(toList());
+    }
+
+    @Override
+    public Collection<Item> getRequestedItems(String text) {
+        Collection<Item> requestedItems = new ArrayList<>();
         if (text.isBlank()) {
             return requestedItems;
         }
@@ -77,22 +74,17 @@ public class InMemoryItemStorage implements ItemStorage {
             StringBuilder descriptionInLowerCase = new StringBuilder(item.getDescription().toLowerCase());
             if ((nameInLowerCase.toString().contains(request.toString()) ||
                     descriptionInLowerCase.toString().contains(request.toString()))
-                    && item.isAvailable()) {
-                requestedItems.add(toItemDto(item));
+                    && item.getAvailable()) {
+                requestedItems.add(item);
             }
         }
         return requestedItems;
     }
 
-    @Override
-    public boolean isExistById(long itemId) {
-        return items.containsKey(itemId);
-    }
-
-    private void checkOwner(ItemDto itemDto, long ownerId) {
-        if (items.get(itemDto.getId()).getOwner() != ownerId) {
-            log.warn("Item update with other user: {}", ownerId);
-            throw new NotFoundException("Item update with other user: " + ownerId);
+    private void checkOwner(Item item) {
+        if (items.get(item.getId()).getOwner() != item.getOwner()) {
+            log.warn("Item update with other user: {}", item.getOwner());
+            throw new NotFoundException("Item update with other user: " + item.getOwner());
         }
     }
 }
