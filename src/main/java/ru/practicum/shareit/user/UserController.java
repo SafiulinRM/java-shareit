@@ -7,9 +7,9 @@ import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.Collection;
 
-/**
- * // TODO .
- */
+import static java.util.stream.Collectors.toList;
+import static ru.practicum.shareit.user.UserMapper.*;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
@@ -19,22 +19,22 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public UserDto getById(@PathVariable long userId) {
-        return userService.getById(userId);
+        return toUserDto(userService.getById(userId));
     }
 
     @PostMapping
     public UserDto add(@Validated({Create.class}) @RequestBody UserDto userDto) {
-        return userService.add(userDto);
+        return toUserDto(userService.add(toUser(userDto)));
     }
 
     @PatchMapping("/{userId}")
     public UserDto update(@Validated({Update.class}) @RequestBody UserDto userDto, @PathVariable long userId) {
-        return userService.update(userDto, userId);
+        return toUserDto(userService.update(updateUser(userDto, userId)));
     }
 
     @GetMapping
     public Collection<UserDto> getAll() {
-        return userService.getAll();
+        return userService.getAll().stream().map(user -> toUserDto(user)).collect(toList());
     }
 
     @DeleteMapping("/{userId}")
