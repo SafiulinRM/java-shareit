@@ -1,7 +1,13 @@
 package ru.practicum.shareit.requests;
 
-/**
- * // TODO .
- */
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+@Data
 public class ItemRequest {
+    private long id;
+    private String description;
+    private long requestor;
+    private LocalDateTime created;
 }
