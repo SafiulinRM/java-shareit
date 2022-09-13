@@ -26,11 +26,11 @@ public class BookingService {
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
 
-    public Booking add(long booker_id, BookingDto bookingDto) {
+    public Booking add(long bookerId, BookingDto bookingDto) {
         Item item = itemRepository.findById(bookingDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Item not found " + bookingDto.getItemId()));
-        User booker = userRepository.findById(booker_id)
-                .orElseThrow(() -> new NotFoundException("Item not found " + booker_id));
+        User booker = userRepository.findById(bookerId)
+                .orElseThrow(() -> new NotFoundException("Item not found " + bookerId));
         Booking booking = toBooking(bookingDto, item, booker, State.WAITING);
         validationBooking(booking);
         Booking saveBooking = bookingRepository.save(booking);

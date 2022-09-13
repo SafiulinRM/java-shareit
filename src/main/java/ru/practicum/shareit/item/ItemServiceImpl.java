@@ -70,8 +70,8 @@ public class ItemServiceImpl implements ItemService {
     public Item getByItemId(long itemId, long userId) {
         Item newItem = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("item not found " + itemId));
         setBookingsOfItem(newItem, userId);
-        Collection<CommentDto> comments = commentRepository.
-                findByItem_Id(itemId).stream().map(c -> toCommentDto(c)).collect(toList());
+        Collection<CommentDto> comments = commentRepository
+                .findByItem_Id(itemId).stream().map(c -> toCommentDto(c)).collect(toList());
         newItem.setComments(comments);
         log.info("Got user id: {}", itemId);
         return newItem;
@@ -89,8 +89,8 @@ public class ItemServiceImpl implements ItemService {
         if (text.isBlank()) {
             return new ArrayList<>();
         }
-        Collection<Item> items = itemRepository.
-                search(text);
+        Collection<Item> items = itemRepository
+                .search(text);
         log.info("Got items: {}", items.size());
         return items;
     }
