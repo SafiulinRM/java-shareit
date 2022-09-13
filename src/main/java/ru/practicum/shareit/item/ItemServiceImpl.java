@@ -42,7 +42,6 @@ public class ItemServiceImpl implements ItemService {
         Item newItem = itemRepository.save(item);
         log.info("Added item name: {}", item.getName());
         return newItem;
-
     }
 
     @Override
