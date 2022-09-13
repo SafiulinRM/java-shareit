@@ -1,9 +1,11 @@
 package ru.practicum.shareit.exception;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 
 @RestControllerAdvice
 public class ErrorHandler {
@@ -21,14 +23,14 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleException(final Exception e) {
-        return new ErrorResponse("Произошла непредвиденная ошибка.", e.getMessage());
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException e) {
+        return new ErrorResponse("Конфликт с базой данных", e.getMessage());
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleUserAlreadyExistsException(final UserAlreadyExistsException e) {
-        return new ErrorResponse("Конфликт с почтой.", e.getMessage());
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleUnsupportedStatusException(final UnsupportedStatusException e) {
+        return new ErrorResponse("Unknown state: UNSUPPORTED_STATUS", e.getMessage());
     }
 }
