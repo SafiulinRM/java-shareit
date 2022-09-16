@@ -71,7 +71,9 @@ public class ItemServiceImpl implements ItemService {
         Item newItem = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("item not found " + itemId));
         setBookingsOfItem(newItem, userId);
         Collection<CommentDto> comments = commentRepository
-                .findByItem_Id(itemId).stream().map(c -> toCommentDto(c)).collect(toList());
+                .findByItemId(itemId).stream()
+                .map(c -> toCommentDto(c))
+                .collect(toList());
         newItem.setComments(comments);
         log.info("Got user id: {}", itemId);
         return newItem;
@@ -81,7 +83,9 @@ public class ItemServiceImpl implements ItemService {
     public Collection<Item> getItemsOfOwner(long userId) {
         Collection<Item> itemsDto = itemRepository.findByOwnerIdOrderByIdAsc(userId);
         log.info("Got items: {}", itemsDto.size());
-        return itemsDto.stream().map(it -> setBookingsOfItem(it, userId)).collect(toList());
+        return itemsDto.stream()
+                .map(it -> setBookingsOfItem(it, userId))
+                .collect(toList());
     }
 
     @Override
@@ -106,10 +110,10 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void validationComment(long authorId, long itemId) {
-        Collection<Booking> bookingsOfAuthor = bookingRepository.findByBooker_Id(authorId);
+        Collection<Booking> bookingsOfAuthor = bookingRepository.findByBookerId(authorId);
         for (Booking booking : bookingsOfAuthor) {
             if (booking.getItem().getId() == itemId &&
-                    !booking.getStatus().equals(State.REJECTED) &&
+                    !booking.getState().equals(State.REJECTED) &&
                     booking.getStart().isBefore(LocalDateTime.now())) {
                 return;
             }
@@ -118,8 +122,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Item setBookingsOfItem(Item item, long userId) {
-        BookingShort lastBooking = bookingRepository.findByItem_IdAndStartBefore(item.getId(), LocalDateTime.now());
-        BookingShort nextBooking = bookingRepository.findByItem_IdAndStartAfter(item.getId(), LocalDateTime.now());
+        BookingShort lastBooking = bookingRepository.findByItemIdAndStartBefore(item.getId(), LocalDateTime.now());
+        BookingShort nextBooking = bookingRepository.findByItemIdAndStartAfter(item.getId(), LocalDateTime.now());
         if (lastBooking != null) {
             if (lastBooking.getBookerId() != userId) {
                 item.setLastBooking(lastBooking);
