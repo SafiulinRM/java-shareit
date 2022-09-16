@@ -30,7 +30,13 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleUnsupportedStatusException(final UnsupportedStatusException e) {
+    public ErrorResponse handleUnsupportedStateException(final UnsupportedStateException e) {
         return new ErrorResponse("Unknown state: UNSUPPORTED_STATUS", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleBookingException(final BookingException e) {
+        return new ErrorResponse("Ошибка с бронированием", e.getMessage());
     }
 }
