@@ -29,5 +29,5 @@ public class Booking {
     @JoinColumn(name = "booker_id")
     private User booker;
     @Enumerated(EnumType.STRING)
-    private State status;
+    private State state;
 }
