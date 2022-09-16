@@ -36,18 +36,16 @@ public class BookingController {
     }
 
     @GetMapping()
-    public Collection<BookingDtoOutput> getBookingsOfUser
-            (@RequestHeader(USER_ID_HEADER) long userId,
-             @RequestParam(required = false, defaultValue = DEFAULT_STATE) String state) {
+    public Collection<BookingDtoOutput> getBookingsOfUser(@RequestHeader(USER_ID_HEADER) long userId,
+                                                          @RequestParam(required = false, defaultValue = DEFAULT_STATE) String state) {
         return bookingService.getBookingsOfUser(userId, state).stream()
                 .map(BookingMapper::toBookingDtoOutput)
                 .collect(toList());
     }
 
     @GetMapping("/owner")
-    public Collection<BookingDtoOutput> getBookingsForAllItemsOfUser
-            (@RequestHeader(USER_ID_HEADER) long userId,
-             @RequestParam(required = false, defaultValue = DEFAULT_STATE) String state) {
+    public Collection<BookingDtoOutput> getBookingsForAllItemsOfUser(@RequestHeader(USER_ID_HEADER) long userId,
+                                                                     @RequestParam(required = false, defaultValue = DEFAULT_STATE) String state) {
         return bookingService.getBookingsForAllItemsOfUser(userId, state).stream()
                 .map(BookingMapper::toBookingDtoOutput)
                 .collect(toList());
