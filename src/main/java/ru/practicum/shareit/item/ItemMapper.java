@@ -1,7 +1,7 @@
 package ru.practicum.shareit.item;
 
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemDtoInfo;
+import ru.practicum.shareit.item.dto.ItemDtoEnlarged;
 import ru.practicum.shareit.item.model.Item;
 
 public class ItemMapper {
@@ -39,8 +39,8 @@ public class ItemMapper {
         return item;
     }
 
-    public static ItemDtoInfo toItemDtoInfo(Item item) {
-        return new ItemDtoInfo(item.getId(),
+    public static ItemDtoEnlarged toItemDtoEnlarged(Item item) {
+        return new ItemDtoEnlarged(item.getId(),
                 item.getName(),
                 item.getDescription(),
                 item.getAvailable(),
