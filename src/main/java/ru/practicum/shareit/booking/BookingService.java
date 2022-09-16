@@ -3,9 +3,10 @@ package ru.practicum.shareit.booking;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingDtoInput;
+import ru.practicum.shareit.exception.BookingException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.UnsupportedStatusException;
+import ru.practicum.shareit.exception.UnsupportedStateException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
@@ -13,7 +14,6 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 
 import static ru.practicum.shareit.booking.BookingMapper.toBooking;
@@ -26,7 +26,7 @@ public class BookingService {
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
 
-    public Booking add(long bookerId, BookingDto bookingDto) {
+    public Booking add(long bookerId, BookingDtoInput bookingDto) {
         Item item = itemRepository.findById(bookingDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Item not found " + bookingDto.getItemId()));
         User booker = userRepository.findById(bookerId)
@@ -41,34 +41,59 @@ public class BookingService {
     public Booking approveBooking(long bookingId, Boolean approved, long userId) {
         Booking newBooking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking not found " + bookingId));
-        if (approved && userId == newBooking.getItem().getOwnerId()) {
-            if (newBooking.getStatus().equals(State.APPROVED)) {
-                throw new ValidationException("Booking already agreed");
-            }
-            newBooking.setStatus(State.APPROVED);
-        } else if (!approved && userId == newBooking.getItem().getOwnerId()) {
-            newBooking.getItem().setAvailable(true);
-            newBooking.setStatus(State.REJECTED);
-        } else if (!approved && userId == newBooking.getBooker().getId()) {
-            newBooking.getItem().setAvailable(true);
-            newBooking.setStatus(State.CANCELED);
-        } else {
-            throw new NotFoundException("Approve the booking failed");
+        checkUserOfBooking(newBooking, userId);
+        switch (String.valueOf(approved)) {
+            case "true":
+                setStateApprove(newBooking, userId);
+                break;
+            case "false":
+                setStateRejectedOrCanceled(newBooking, userId);
+                break;
         }
         bookingRepository.save(newBooking);
-        log.info("Booking status: {}", newBooking.getStatus());
+        log.info("Booking state: {}", newBooking.getState());
         return newBooking;
+    }
+
+    private void checkState(Booking newBooking) {
+        if (newBooking.getState().equals(State.APPROVED)) {
+            throw new ValidationException("Booking already agreed");
+        }
+    }
+
+    private void checkUserOfBooking(Booking newBooking, long userId) {
+        if (userId != newBooking.getItem().getOwnerId() &&
+                userId != newBooking.getBooker().getId()) {
+            throw new BookingException("The user is not associated with the booking: " + userId);
+
+        }
+    }
+
+    private void setStateApprove(Booking newBooking, long userId) {
+        if (userId == newBooking.getItem().getOwnerId()) {
+            checkState(newBooking);
+            newBooking.setState(State.APPROVED);
+        } else {
+            throw new BookingException("Booker can not approve Booking, bookerId: " + newBooking.getBooker().getId());
+        }
+    }
+
+    private void setStateRejectedOrCanceled(Booking newBooking, long userId) {
+        if (userId == newBooking.getItem().getOwnerId()) {
+            newBooking.getItem().setAvailable(true);
+            newBooking.setState(State.REJECTED);
+        } else {
+            newBooking.getItem().setAvailable(true);
+            newBooking.setState(State.CANCELED);
+        }
     }
 
     public Booking getById(long bookingId, long userId) {
         Booking newBooking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking not found " + bookingId));
-        if (newBooking.getItem().getOwnerId() == userId || newBooking.getBooker().getId() == userId) {
-            log.info("Get booking id: {}", newBooking.getId());
-            return newBooking;
-        } else {
-            throw new NotFoundException("The user is not associated with the booking: " + userId);
-        }
+        checkUserOfBooking(newBooking, userId);
+        log.info("Get booking id: {}", newBooking.getId());
+        return newBooking;
     }
 
     public Collection<Booking> getBookingsOfUser(long userId, String status) {
@@ -76,31 +101,31 @@ public class BookingService {
             throw new NotFoundException("User not found: " + userId);
         }
         State state;
-        Collection<Booking> bookings = new ArrayList<>();
+        Collection<Booking> bookings;
         switch (status) {
             case "ALL":
-                bookings = bookingRepository.findByBooker_IdOrderByStartDesc(userId);
+                bookings = bookingRepository.findByBookerIdOrderByStartDesc(userId);
                 break;
             case "CURRENT":
-                bookings = bookingRepository.findByBooker_IdAndStartBeforeAndEndAfterOrderByStartDesc(userId,
+                bookings = bookingRepository.findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(userId,
                         LocalDateTime.now(), LocalDateTime.now());
                 break;
             case "PAST":
-                bookings = bookingRepository.findByBooker_IdAndEndBeforeOrderByStartDesc(userId, LocalDateTime.now());
+                bookings = bookingRepository.findByBookerIdAndEndBeforeOrderByStartDesc(userId, LocalDateTime.now());
                 break;
             case "FUTURE":
-                bookings = bookingRepository.findByBooker_IdAndStartAfterOrderByStartDesc(userId, LocalDateTime.now());
+                bookings = bookingRepository.findByBookerIdAndStartAfterOrderByStartDesc(userId, LocalDateTime.now());
                 break;
             case "WAITING":
                 state = State.WAITING;
-                bookings = bookingRepository.findByBooker_IdAndStatusOrderByStartDesc(userId, state);
+                bookings = bookingRepository.findByBookerIdAndStateOrderByStartDesc(userId, state);
                 break;
             case "REJECTED":
                 state = State.REJECTED;
-                bookings = bookingRepository.findByBooker_IdAndStatusOrderByStartDesc(userId, state);
+                bookings = bookingRepository.findByBookerIdAndStateOrderByStartDesc(userId, state);
                 break;
             default:
-                throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
+                throw new UnsupportedStateException("Unknown state: UNSUPPORTED_STATUS");
         }
         return bookings;
     }
@@ -110,7 +135,7 @@ public class BookingService {
             throw new NotFoundException("User not found: " + userId);
         }
         State state;
-        Collection<Booking> bookings = new ArrayList<>();
+        Collection<Booking> bookings;
         switch (status) {
             case "ALL":
                 bookings = bookingRepository.getBookingsOfOwner(userId);
@@ -127,14 +152,14 @@ public class BookingService {
                 break;
             case "WAITING":
                 state = State.WAITING;
-                bookings = bookingRepository.getBookingsOfOwnerAndStatus(userId, state);
+                bookings = bookingRepository.getBookingsOfOwnerAndState(userId, state);
                 break;
             case "REJECTED":
                 state = State.REJECTED;
-                bookings = bookingRepository.getBookingsOfOwnerAndStatus(userId, state);
+                bookings = bookingRepository.getBookingsOfOwnerAndState(userId, state);
                 break;
             default:
-                throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
+                throw new UnsupportedStateException("Unknown state: UNSUPPORTED_STATUS");
         }
         return bookings;
     }
