@@ -8,7 +8,7 @@ import java.util.Collection;
 
 @Data
 @AllArgsConstructor
-public class ItemDtoInfo {
+public class ItemDtoEnlarged {
     private long id;
     private String name;
     private String description;
