@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import ru.practicum.shareit.booking.dto.BookingShort;
@@ -19,29 +20,24 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByBookerIdAndStateOrderByStartDesc(long userId, State state);
 
     @Query("select b from Booking b " +
-            "where b.item in (select i from Item i where i.ownerId = ?1) " +
-            "order by b.start desc")
-    List<Booking> getBookingsOfOwner(long userId);
+            "where b.item in (select i from Item i where i.owner.id = ?1)")
+    List<Booking> getBookingsOfOwner(long userId, Sort sort);
 
     @Query("select b from Booking b " +
-            "where b.item in (select i from Item i where i.ownerId = ?1) AND ?2 between b.start and b.end " +
-            "order by b.start desc")
-    List<Booking> getBookingsOfOwnerInCurrent(long userId, LocalDateTime now);
+            "where b.item in (select i from Item i where i.owner.id = ?1) AND ?2 between b.start and b.end")
+    List<Booking> getBookingsOfOwnerInCurrent(long userId, LocalDateTime now, Sort sort);
 
     @Query("select b from Booking b " +
-            "where b.item in (select i from Item i where i.ownerId = ?1) AND b.end <=?2 " +
-            "order by b.start desc")
-    List<Booking> getBookingsOfOwnerInPast(long userId, LocalDateTime now);
+            "where b.item in (select i from Item i where i.owner.id = ?1) AND b.end <=?2")
+    List<Booking> getBookingsOfOwnerInPast(long userId, LocalDateTime now, Sort sort);
 
     @Query("select b from Booking b " +
-            "where b.item in (select i from Item i where i.ownerId = ?1) AND b.start > ?2 " +
-            "order by b.start desc")
-    List<Booking> getBookingsOfOwnerInFuture(long userId, LocalDateTime now);
+            "where b.item in (select i from Item i where i.owner.id = ?1) AND b.start > ?2")
+    List<Booking> getBookingsOfOwnerInFuture(long userId, LocalDateTime now, Sort sort);
 
     @Query("select b from Booking b " +
-            "where b.item in (select i from Item i where i.ownerId = ?1) AND b.state = ?2 " +
-            "order by b.start desc")
-    List<Booking> getBookingsOfOwnerAndState(long userId, State state);
+            "where b.item in (select i from Item i where i.owner.id = ?1) AND b.state = ?2")
+    List<Booking> getBookingsOfOwnerAndState(long userId, State state, Sort sort);
 
     BookingShort findByItemIdAndStartBefore(long itemId, LocalDateTime now);
 
