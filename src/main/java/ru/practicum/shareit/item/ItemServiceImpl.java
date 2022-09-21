@@ -12,6 +12,7 @@ import ru.practicum.shareit.booking.dto.BookingShort;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
@@ -23,10 +24,13 @@ import java.util.Collection;
 
 import static java.util.stream.Collectors.toList;
 import static ru.practicum.shareit.item.CommentMapper.toComment;
-import static ru.practicum.shareit.item.CommentMapper.toCommentDto;
+import static ru.practicum.shareit.item.CommentMapper.toCommentsDto;
+import static ru.practicum.shareit.item.ItemMapper.toItem;
+import static ru.practicum.shareit.item.ItemMapper.updateItem;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
@@ -36,33 +40,35 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public Item add(Item item) {
-        User newUser = userRepository.findById(item.getOwnerId())
-                .orElseThrow(() -> new NotFoundException("User not found " + item.getOwnerId()));
+    public Item add(ItemDto itemDto, long userId) {
+        User owner = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found " + userId));
+        Item item = toItem(itemDto, owner);
         Item newItem = itemRepository.save(item);
         log.info("Added item name: {}", item.getName());
         return newItem;
     }
 
     @Override
-    public Item update(Item item) {
-        Item newItem = itemRepository.findById(item.getId())
-                .orElseThrow(() -> new NotFoundException("Item not found " + item.getId()));
-        if (item.getOwnerId() != newItem.getOwnerId()) {
-            log.info("Wrong owner id: {}", item.getOwnerId());
-            throw new NotFoundException("Wrong owner id: " + item.getOwnerId());
+    @Transactional
+    public Item update(ItemDto itemDto, long userId, long itemId) {
+        Item updateItem = updateItem(itemDto, itemId);
+        Item newItem = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found " + itemId));
+        if (userId != newItem.getOwner().getId()) {
+            log.info("Wrong owner id: {}", userId);
+            throw new NotFoundException("Wrong owner id: " + userId);
         }
-        if (item.getName() != null) {
-            newItem.setName(item.getName());
+        if (updateItem.getName() != null) {
+            newItem.setName(updateItem.getName());
         }
-        if (item.getDescription() != null) {
-            newItem.setDescription(item.getDescription());
+        if (updateItem.getDescription() != null) {
+            newItem.setDescription(updateItem.getDescription());
         }
-        if (item.getAvailable() != null) {
-            newItem.setAvailable(item.getAvailable());
+        if (updateItem.getAvailable() != null) {
+            newItem.setAvailable(updateItem.getAvailable());
         }
-        itemRepository.save(newItem);
-        log.info("Updated item id: {}", item.getId());
+        log.info("Updated item id: {}", itemId);
         return newItem;
     }
 
@@ -70,10 +76,7 @@ public class ItemServiceImpl implements ItemService {
     public Item getByItemId(long itemId, long userId) {
         Item newItem = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("item not found " + itemId));
         setBookingsOfItem(newItem, userId);
-        Collection<CommentDto> comments = commentRepository
-                .findByItemId(itemId).stream()
-                .map(c -> toCommentDto(c))
-                .collect(toList());
+        Collection<CommentDto> comments = toCommentsDto(commentRepository.findByItemId(itemId));
         newItem.setComments(comments);
         log.info("Got user id: {}", itemId);
         return newItem;
@@ -100,10 +103,11 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public Comment addComment(long itemId, long authorId, CommentDto commentDto) {
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("item not found " + itemId));
         User author = userRepository.findById(authorId)
-                .orElseThrow(() -> new NotFoundException("User not found " + item.getOwnerId()));
+                .orElseThrow(() -> new NotFoundException("User not found " + item.getOwner().getId()));
         validationComment(authorId, itemId);
         Comment newComment = toComment(commentDto, author, item);
         return commentRepository.save(newComment);

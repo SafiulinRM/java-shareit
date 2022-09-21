@@ -2,7 +2,9 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDtoInput;
 import ru.practicum.shareit.exception.BookingException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -20,12 +22,15 @@ import static ru.practicum.shareit.booking.BookingMapper.toBooking;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BookingService {
+    private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.DESC, "start");
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
 
+    @Transactional
     public Booking add(long bookerId, BookingDtoInput bookingDto) {
         Item item = itemRepository.findById(bookingDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Item not found " + bookingDto.getItemId()));
@@ -38,6 +43,7 @@ public class BookingService {
         return saveBooking;
     }
 
+    @Transactional
     public Booking approveBooking(long bookingId, Boolean approved, long userId) {
         Booking newBooking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking not found " + bookingId));
@@ -50,7 +56,6 @@ public class BookingService {
                 setStateRejectedOrCanceled(newBooking, userId);
                 break;
         }
-        bookingRepository.save(newBooking);
         log.info("Booking state: {}", newBooking.getState());
         return newBooking;
     }
@@ -62,7 +67,7 @@ public class BookingService {
     }
 
     private void checkUserOfBooking(Booking newBooking, long userId) {
-        if (userId != newBooking.getItem().getOwnerId() &&
+        if (userId != newBooking.getItem().getOwner().getId() &&
                 userId != newBooking.getBooker().getId()) {
             throw new BookingException("The user is not associated with the booking: " + userId);
 
@@ -70,7 +75,7 @@ public class BookingService {
     }
 
     private void setStateApprove(Booking newBooking, long userId) {
-        if (userId == newBooking.getItem().getOwnerId()) {
+        if (userId == newBooking.getItem().getOwner().getId()) {
             checkState(newBooking);
             newBooking.setState(State.APPROVED);
         } else {
@@ -79,7 +84,7 @@ public class BookingService {
     }
 
     private void setStateRejectedOrCanceled(Booking newBooking, long userId) {
-        if (userId == newBooking.getItem().getOwnerId()) {
+        if (userId == newBooking.getItem().getOwner().getId()) {
             newBooking.getItem().setAvailable(true);
             newBooking.setState(State.REJECTED);
         } else {
@@ -138,25 +143,24 @@ public class BookingService {
         Collection<Booking> bookings;
         switch (status) {
             case "ALL":
-                bookings = bookingRepository.getBookingsOfOwner(userId);
+                bookings = bookingRepository.getBookingsOfOwner(userId, DEFAULT_SORT);
                 break;
             case "CURRENT":
-                bookings = bookingRepository.getBookingsOfOwnerInCurrent(userId,
-                        LocalDateTime.now());
+                bookings = bookingRepository.getBookingsOfOwnerInCurrent(userId, LocalDateTime.now(), DEFAULT_SORT);
                 break;
             case "PAST":
-                bookings = bookingRepository.getBookingsOfOwnerInPast(userId, LocalDateTime.now());
+                bookings = bookingRepository.getBookingsOfOwnerInPast(userId, LocalDateTime.now(), DEFAULT_SORT);
                 break;
             case "FUTURE":
-                bookings = bookingRepository.getBookingsOfOwnerInFuture(userId, LocalDateTime.now());
+                bookings = bookingRepository.getBookingsOfOwnerInFuture(userId, LocalDateTime.now(), DEFAULT_SORT);
                 break;
             case "WAITING":
                 state = State.WAITING;
-                bookings = bookingRepository.getBookingsOfOwnerAndState(userId, state);
+                bookings = bookingRepository.getBookingsOfOwnerAndState(userId, state, DEFAULT_SORT);
                 break;
             case "REJECTED":
                 state = State.REJECTED;
-                bookings = bookingRepository.getBookingsOfOwnerAndState(userId, state);
+                bookings = bookingRepository.getBookingsOfOwnerAndState(userId, state, DEFAULT_SORT);
                 break;
             default:
                 throw new UnsupportedStateException("Unknown state: UNSUPPORTED_STATUS");
@@ -168,13 +172,10 @@ public class BookingService {
         if (!booking.getItem().getAvailable()) {
             throw new ValidationException("Item not available " + booking.getItem().getAvailable());
         }
-        if (booking.getStart().isAfter(booking.getEnd()) ||
-                booking.getEnd().isBefore(LocalDateTime.now()) ||
-                booking.getStart().equals(booking.getEnd()) ||
-                booking.getStart().isBefore(LocalDateTime.now())) {
+        if (!booking.getStart().isBefore(booking.getEnd())) {
             throw new ValidationException("Start: " + booking.getStart() + " or end: " + booking.getEnd() + " incorrect");
         }
-        if (booking.getBooker().getId() == booking.getItem().getOwnerId()) {
+        if (booking.getBooker().getId() == booking.getItem().getOwner().getId()) {
             throw new NotFoundException("Booker cannot be the owner");
         }
     }
