@@ -7,7 +7,6 @@ import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.Collection;
 
-import static java.util.stream.Collectors.toList;
 import static ru.practicum.shareit.user.UserMapper.*;
 
 @RestController
@@ -34,7 +33,7 @@ public class UserController {
 
     @GetMapping
     public Collection<UserDto> getAll() {
-        return userService.getAll().stream().map(user -> toUserDto(user)).collect(toList());
+        return toUsersDto(userService.getAll());
     }
 
     @DeleteMapping("/{userId}")

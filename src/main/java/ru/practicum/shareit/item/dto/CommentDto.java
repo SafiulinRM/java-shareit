@@ -5,17 +5,14 @@ import lombok.Data;
 import ru.practicum.shareit.user.Create;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
-public class ItemDto {
+public class CommentDto {
     private Long id;
     @NotBlank(groups = {Create.class})
-    private String name;
-    @NotBlank(groups = {Create.class})
-    private String description;
-    @NotNull(groups = {Create.class})
-    private Boolean available;
-    private Long requestId;
+    private String text;
+    private String authorName;
+    private LocalDateTime created;
 }
