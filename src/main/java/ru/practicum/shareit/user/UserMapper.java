@@ -1,7 +1,14 @@
 package ru.practicum.shareit.user;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.practicum.shareit.user.dto.UserDto;
 
+import java.util.Collection;
+
+import static java.util.stream.Collectors.toList;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserMapper {
     public static UserDto toUserDto(User user) {
         return new UserDto(
@@ -25,5 +32,11 @@ public class UserMapper {
         user.setName(userDto.getName());
         user.setEmail(userDto.getEmail());
         return user;
+    }
+
+    public static Collection<UserDto> toUsersDto(Collection<User> users) {
+        return users.stream()
+                .map(UserMapper::toUserDto)
+                .collect(toList());
     }
 }
