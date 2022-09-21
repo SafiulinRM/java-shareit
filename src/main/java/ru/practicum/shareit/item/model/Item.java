@@ -1,8 +1,12 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import ru.practicum.shareit.booking.dto.BookingShort;
 import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.user.User;
 
 import javax.persistence.*;
 import java.util.Collection;
@@ -11,7 +15,6 @@ import java.util.Collection;
 @Table(name = "items", schema = "public")
 @Getter
 @Setter
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 public class Item {
@@ -22,8 +25,9 @@ public class Item {
     private String description;
     @Column(name = "is_available")
     private Boolean available;
-    @Column(name = "owner_id")
-    private long ownerId;
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
     @Column(name = "request_id")
     private Long requestId;
     @Transient
