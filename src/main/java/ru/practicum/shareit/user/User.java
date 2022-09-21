@@ -2,7 +2,6 @@ package ru.practicum.shareit.user;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import javax.persistence.*;
 
@@ -10,11 +9,12 @@ import javax.persistence.*;
 @Table(name = "users", schema = "public")
 @Getter
 @Setter
-@ToString
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+    @Column(nullable = false)
     private String name;
+    @Column(length = 512, nullable = false)
     private String email;
 }
