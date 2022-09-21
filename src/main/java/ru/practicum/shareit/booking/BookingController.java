@@ -1,14 +1,16 @@
 package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDtoInput;
 import ru.practicum.shareit.booking.dto.BookingDtoOutput;
+import ru.practicum.shareit.user.Create;
 
 import java.util.Collection;
 
-import static java.util.stream.Collectors.toList;
 import static ru.practicum.shareit.booking.BookingMapper.toBookingDtoOutput;
+import static ru.practicum.shareit.booking.BookingMapper.toBookingsDtoOutput;
 
 @RestController
 @RequestMapping(path = "/bookings")
@@ -19,7 +21,8 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping
-    public BookingDtoOutput add(@RequestHeader(USER_ID_HEADER) long userId, @RequestBody BookingDtoInput bookingDto) {
+    public BookingDtoOutput add(@RequestHeader(USER_ID_HEADER) long userId,
+                                @Validated({Create.class}) @RequestBody BookingDtoInput bookingDto) {
         return toBookingDtoOutput(bookingService.add(userId, bookingDto));
     }
 
@@ -38,16 +41,12 @@ public class BookingController {
     @GetMapping()
     public Collection<BookingDtoOutput> getBookingsOfUser(@RequestHeader(USER_ID_HEADER) long userId,
                                                           @RequestParam(required = false, defaultValue = DEFAULT_STATE) String state) {
-        return bookingService.getBookingsOfUser(userId, state).stream()
-                .map(BookingMapper::toBookingDtoOutput)
-                .collect(toList());
+        return toBookingsDtoOutput(bookingService.getBookingsOfUser(userId, state));
     }
 
     @GetMapping("/owner")
     public Collection<BookingDtoOutput> getBookingsForAllItemsOfUser(@RequestHeader(USER_ID_HEADER) long userId,
                                                                      @RequestParam(required = false, defaultValue = DEFAULT_STATE) String state) {
-        return bookingService.getBookingsForAllItemsOfUser(userId, state).stream()
-                .map(BookingMapper::toBookingDtoOutput)
-                .collect(toList());
+        return toBookingsDtoOutput(bookingService.getBookingsForAllItemsOfUser(userId, state));
     }
 }

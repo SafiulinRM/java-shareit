@@ -11,7 +11,6 @@ import ru.practicum.shareit.user.Update;
 
 import java.util.Collection;
 
-import static java.util.stream.Collectors.toList;
 import static ru.practicum.shareit.item.CommentMapper.toCommentDto;
 import static ru.practicum.shareit.item.ItemMapper.*;
 
@@ -24,14 +23,14 @@ public class ItemController {
 
     @PostMapping
     public ItemDto add(@Validated({Create.class}) @RequestBody ItemDto itemDto, @RequestHeader(USER_ID_HEADER) long userId) {
-        return toItemDto(itemService.add(toItem(itemDto, userId)));
+        return toItemDto(itemService.add(itemDto, userId));
     }
 
     @PatchMapping("/{itemId}")
     public ItemDto update(@Validated({Update.class}) @RequestBody ItemDto itemDto,
                           @RequestHeader(USER_ID_HEADER) long userId,
                           @PathVariable long itemId) {
-        return toItemDto(itemService.update(updateItem(itemDto, userId, itemId)));
+        return toItemDto(itemService.update(itemDto, userId, itemId));
     }
 
     @GetMapping("/{itemId}")
@@ -41,16 +40,12 @@ public class ItemController {
 
     @GetMapping()
     public Collection<ItemDtoEnlarged> getItemsOfOwner(@RequestHeader(USER_ID_HEADER) long ownerId) {
-        return itemService.getItemsOfOwner(ownerId).stream()
-                .map(it -> toItemDtoEnlarged(it))
-                .collect(toList());
+        return toItemsDtoEnlarged(itemService.getItemsOfOwner(ownerId));
     }
 
     @GetMapping("/search")
     public Collection<ItemDto> getRequestedItems(@RequestParam String text) {
-        return itemService.getRequestedItems(text).stream()
-                .map(it -> toItemDto(it))
-                .collect(toList());
+        return toItemsDto(itemService.getRequestedItems(text));
     }
 
     @PostMapping("/{itemId}/comment")
