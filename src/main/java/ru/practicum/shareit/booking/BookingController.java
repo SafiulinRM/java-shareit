@@ -7,11 +7,12 @@ import ru.practicum.shareit.booking.dto.BookingDtoInput;
 import ru.practicum.shareit.booking.dto.BookingDtoOutput;
 import ru.practicum.shareit.user.Create;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
 import java.util.Collection;
 
-import static ru.practicum.shareit.booking.BookingMapper.toBookingDtoOutput;
-import static ru.practicum.shareit.booking.BookingMapper.toBookingsDtoOutput;
 
+@Validated
 @RestController
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
@@ -23,30 +24,34 @@ public class BookingController {
     @PostMapping
     public BookingDtoOutput add(@RequestHeader(USER_ID_HEADER) long userId,
                                 @Validated({Create.class}) @RequestBody BookingDtoInput bookingDto) {
-        return toBookingDtoOutput(bookingService.add(userId, bookingDto));
+        return bookingService.add(userId, bookingDto);
     }
 
     @PatchMapping("/{bookingId}")
     public BookingDtoOutput approveBooking(@PathVariable long bookingId,
                                            @RequestParam Boolean approved,
                                            @RequestHeader(USER_ID_HEADER) long userId) {
-        return toBookingDtoOutput(bookingService.approveBooking(bookingId, approved, userId));
+        return bookingService.approveBooking(bookingId, approved, userId);
     }
 
     @GetMapping("/{bookingId}")
     public BookingDtoOutput getById(@PathVariable long bookingId, @RequestHeader(USER_ID_HEADER) long userId) {
-        return toBookingDtoOutput(bookingService.getById(bookingId, userId));
+        return bookingService.getById(bookingId, userId);
     }
 
     @GetMapping()
     public Collection<BookingDtoOutput> getBookingsOfUser(@RequestHeader(USER_ID_HEADER) long userId,
-                                                          @RequestParam(required = false, defaultValue = DEFAULT_STATE) String state) {
-        return toBookingsDtoOutput(bookingService.getBookingsOfUser(userId, state));
+                                                          @RequestParam(required = false, defaultValue = DEFAULT_STATE) String state,
+                                                          @RequestParam(required = false, defaultValue = "0") @Min(0L) int from,
+                                                          @RequestParam(required = false, defaultValue = "10") @Positive int size) {
+        return bookingService.getBookingsOfUser(userId, state, from, size);
     }
 
     @GetMapping("/owner")
     public Collection<BookingDtoOutput> getBookingsForAllItemsOfUser(@RequestHeader(USER_ID_HEADER) long userId,
-                                                                     @RequestParam(required = false, defaultValue = DEFAULT_STATE) String state) {
-        return toBookingsDtoOutput(bookingService.getBookingsForAllItemsOfUser(userId, state));
+                                                                     @RequestParam(required = false, defaultValue = DEFAULT_STATE) String state,
+                                                                     @RequestParam(required = false, defaultValue = "0") @Min(0L) int from,
+                                                                     @RequestParam(required = false, defaultValue = "10") @Positive int size) {
+        return bookingService.getBookingsForAllItemsOfUser(userId, state, from, size);
     }
 }
