@@ -21,6 +21,7 @@ import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Objects;
 
 import static ru.practicum.shareit.booking.BookingMapper.*;
 
@@ -183,7 +184,7 @@ public class BookingService {
         if (!booking.getStart().isBefore(booking.getEnd())) {
             throw new ValidationException("Start: " + booking.getStart() + " or end: " + booking.getEnd() + " incorrect");
         }
-        if (booking.getBooker().getId() == booking.getItem().getOwner().getId()) {
+        if (Objects.equals(booking.getBooker().getId(), booking.getItem().getOwner().getId())) {
             throw new NotFoundException("Booker cannot be the owner");
         }
     }
