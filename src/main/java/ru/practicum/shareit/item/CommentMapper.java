@@ -24,6 +24,7 @@ public class CommentMapper {
 
     public static Comment toComment(CommentDto commentDto, User author, Item item) {
         return new Comment(
+                commentDto.getId(),
                 commentDto.getText(),
                 item,
                 author
