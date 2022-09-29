@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.State;
 import ru.practicum.shareit.user.Create;
 import ru.practicum.shareit.user.Update;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class BookingDtoInput {
     private Long id;
     @FutureOrPresent(groups = {Create.class})

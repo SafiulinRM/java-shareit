@@ -1,23 +1,34 @@
 package ru.practicum.shareit.requests;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
+import ru.practicum.shareit.user.User;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "requests", schema = "public")
 @Getter
 @Setter
-@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class Request {
     @Id
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(name = "description", nullable = false, length = 4000)
     private String description;
-    @Column(name = "requestor_id")
-    private long requestorId;
+    @ManyToOne
+    @JoinColumn(name = "requester_id")
+    private User requester;
+    private LocalDateTime created = LocalDateTime.now();
+
+    public Request(Long id, String description, User requester) {
+        this.id = id;
+        this.description = description;
+        this.requester = requester;
+    }
 }

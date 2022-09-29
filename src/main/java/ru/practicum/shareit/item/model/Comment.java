@@ -32,4 +32,11 @@ public class Comment {
         this.item = item;
         this.author = author;
     }
+
+    public Comment(Long id, String text, Item item, User author) {
+        this.id = id;
+        this.text = text;
+        this.item = item;
+        this.author = author;
+    }
 }
