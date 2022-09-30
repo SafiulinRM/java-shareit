@@ -107,9 +107,7 @@ public class BookingService {
     }
 
     public Collection<BookingDtoOutput> getBookingsOfUser(Long userId, String status, int from, int size) {
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("User not found: " + userId);
-        }
+        checkUserExist(userId);
         State state;
         Page<Booking> bookings;
         int page = from / size;
@@ -143,9 +141,7 @@ public class BookingService {
     }
 
     public Collection<BookingDtoOutput> getBookingsForAllItemsOfUser(long userId, String status, int from, int size) {
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("User not found: " + userId);
-        }
+        checkUserExist(userId);
         State state;
         Page<Booking> bookings;
         int page = from / size;
@@ -186,6 +182,12 @@ public class BookingService {
         }
         if (Objects.equals(booking.getBooker().getId(), booking.getItem().getOwner().getId())) {
             throw new NotFoundException("Booker cannot be the owner");
+        }
+    }
+
+    private void checkUserExist(long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("User not found: " + userId);
         }
     }
 }
