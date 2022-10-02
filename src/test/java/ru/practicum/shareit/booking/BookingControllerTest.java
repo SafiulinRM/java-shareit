@@ -9,8 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.booking.dto.BookingDtoInput;
 import ru.practicum.shareit.booking.dto.BookingDtoOutput;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.User;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -35,16 +33,12 @@ class BookingControllerTest {
     private BookingService bookingService;
     @Autowired
     private MockMvc mvc;
-    private final User user1 = new User(
-            1L,
-            "user1",
-            "user1@mail.com");
-    private final Item item = new Item(1L, "item", "description", true,
-            user1, null, null, null, null);
     private final BookingDtoInput bookingDtoInput =
             new BookingDtoInput(1L, start, end, 1L, 1L, State.WAITING);
+    private final BookingDtoOutput.Booker bookerOut = new BookingDtoOutput.Booker(2L, "user2");
+    private final BookingDtoOutput.Item itemOut = new BookingDtoOutput.Item(1L, "item");
     private final BookingDtoOutput bookingDtoOutput =
-            new BookingDtoOutput(1L, start, end, item, user1, State.WAITING);
+            new BookingDtoOutput(1L, start, end, itemOut, bookerOut, State.WAITING);
 
     @Test
     void add() throws Exception {

@@ -44,6 +44,8 @@ class BookingServiceTest {
     BookingRepository bookingRepository;
     @InjectMocks
     BookingService bookingService;
+    private final BookingDtoOutput.Booker bookerOut = new BookingDtoOutput.Booker(2L, "user2");
+    private final BookingDtoOutput.Item itemOut = new BookingDtoOutput.Item(1L, "item");
 
     @Test
     void add() {
@@ -60,7 +62,7 @@ class BookingServiceTest {
         BookingDtoInput testBookingDtoInput = new BookingDtoInput(1L, LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.now(), 1L, 2L, State.WAITING);
         BookingDtoOutput testBookingDtoOutput = new BookingDtoOutput(1L, LocalDateTime.of(1, 2, 3, 4, 5, 6),
-                testBookingDtoInput.getEnd(), testItem, booker, State.WAITING);
+                testBookingDtoInput.getEnd(), itemOut, bookerOut, State.WAITING);
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(testItem));
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(booker));
         when(bookingRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -146,7 +148,7 @@ class BookingServiceTest {
         Booking testBooking = new Booking(1L, LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.now(), testItem, booker, State.WAITING);
         BookingDtoOutput testBookingDtoOutput = new BookingDtoOutput(1L, LocalDateTime.of(1, 2, 3, 4, 5, 6),
-                testBooking.getEnd(), testItem, booker, State.APPROVED);
+                testBooking.getEnd(), itemOut, bookerOut, State.APPROVED);
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(testBooking));
         BookingDtoOutput bookingDtoOutput = bookingService.approveBooking(1L, true, 1L);
         assertEquals(testBookingDtoOutput, bookingDtoOutput, "Статус не обновился");
@@ -209,7 +211,7 @@ class BookingServiceTest {
         Booking testBooking = new Booking(1L, LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.now(), testItem, booker, State.WAITING);
         BookingDtoOutput testBookingDtoOutput = new BookingDtoOutput(1L, LocalDateTime.of(1, 2, 3, 4, 5, 6),
-                testBooking.getEnd(), testItem, booker, State.WAITING);
+                testBooking.getEnd(), itemOut, bookerOut, State.WAITING);
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(testBooking));
         BookingDtoOutput bookingDtoOutput = bookingService.getById(1L, 1L);
         assertEquals(testBookingDtoOutput, bookingDtoOutput, "Бронирование не получили");
@@ -230,7 +232,7 @@ class BookingServiceTest {
         Booking testBooking = new Booking(1L, LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.now(), testItem, booker, State.WAITING);
         BookingDtoOutput testBookingDtoOutput = new BookingDtoOutput(1L, LocalDateTime.of(1, 2, 3, 4, 5, 6),
-                testBooking.getEnd(), testItem, booker, State.WAITING);
+                testBooking.getEnd(), itemOut, bookerOut, State.WAITING);
         when(userRepository.existsById(anyLong())).thenReturn(true);
         when(bookingRepository.findByBookerId(anyLong(), any()))
                 .thenReturn(new PageImpl<>(List.of(testBooking)));
@@ -244,7 +246,7 @@ class BookingServiceTest {
         BookingDtoOutput testBookingDtoOutputCurrent = new BookingDtoOutput(1L,
                 LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2023, 2, 3, 4, 5, 6),
-                testItem, booker, State.WAITING);
+                itemOut, bookerOut, State.WAITING);
         when(bookingRepository.findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(any(), anyLong(),
                 any(), any())).thenReturn(new PageImpl<>(List.of(testBookingCurrent)));
         Collection<BookingDtoOutput> bookingsDtoOutputCurrent =
@@ -271,7 +273,7 @@ class BookingServiceTest {
         BookingDtoOutput testBookingDtoOutPutPast = new BookingDtoOutput(1L,
                 LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2, 2, 3, 4, 5, 6),
-                testItem, booker, State.APPROVED);
+                itemOut, bookerOut, State.APPROVED);
         Booking testBookingFuture = new Booking(2L,
                 LocalDateTime.of(2023, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2024, 2, 3, 4, 5, 6),
@@ -279,7 +281,7 @@ class BookingServiceTest {
         BookingDtoOutput testBookingDtoOutPutFuture = new BookingDtoOutput(2L,
                 LocalDateTime.of(2023, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2024, 2, 3, 4, 5, 6),
-                testItem, booker, State.APPROVED);
+                itemOut, bookerOut, State.APPROVED);
         when(userRepository.existsById(anyLong())).thenReturn(true);
         when(bookingRepository.findByBookerIdAndEndBeforeOrderByStartDesc(any(), anyLong(), any()))
                 .thenReturn(new PageImpl<>(List.of(testBookingPast)));
@@ -312,7 +314,7 @@ class BookingServiceTest {
         BookingDtoOutput testBookingDtoOutPutWaiting = new BookingDtoOutput(1L,
                 LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2, 2, 3, 4, 5, 6),
-                testItem, booker, State.WAITING);
+                itemOut, bookerOut, State.WAITING);
         Booking testBookingRejected = new Booking(2L,
                 LocalDateTime.of(2023, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2024, 2, 3, 4, 5, 6),
@@ -320,7 +322,7 @@ class BookingServiceTest {
         BookingDtoOutput testBookingDtoOutPutRejected = new BookingDtoOutput(2L,
                 LocalDateTime.of(2023, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2024, 2, 3, 4, 5, 6),
-                testItem, booker, State.REJECTED);
+                itemOut, bookerOut, State.REJECTED);
         when(userRepository.existsById(anyLong())).thenReturn(true);
         when(bookingRepository.findByBookerIdAndStateOrderByStartDesc(any(), anyLong(), any()))
                 .thenReturn(new PageImpl<>(List.of(testBookingWaiting)));
@@ -363,7 +365,7 @@ class BookingServiceTest {
         Booking testBooking = new Booking(1L, LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.now(), testItem, booker, State.WAITING);
         BookingDtoOutput testBookingDtoOutput = new BookingDtoOutput(1L, LocalDateTime.of(1, 2, 3, 4, 5, 6),
-                testBooking.getEnd(), testItem, booker, State.WAITING);
+                testBooking.getEnd(), itemOut, bookerOut, State.WAITING);
         when(userRepository.existsById(anyLong())).thenReturn(true);
         when(bookingRepository.getBookingsOfOwner(anyLong(), any()))
                 .thenReturn(new PageImpl<>(List.of(testBooking)));
@@ -377,7 +379,7 @@ class BookingServiceTest {
         BookingDtoOutput testBookingDtoOutputCurrent = new BookingDtoOutput(1L,
                 LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2023, 2, 3, 4, 5, 6),
-                testItem, booker, State.WAITING);
+                itemOut, bookerOut, State.WAITING);
         when(bookingRepository.getBookingsOfOwnerInCurrent(anyLong(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(testBookingCurrent)));
         Collection<BookingDtoOutput> bookingsDtoOutputCurrent =
@@ -404,7 +406,7 @@ class BookingServiceTest {
         BookingDtoOutput testBookingDtoOutputPast = new BookingDtoOutput(1L,
                 LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2, 2, 3, 4, 5, 6),
-                testItem, booker, State.WAITING);
+                itemOut, bookerOut, State.WAITING);
         when(userRepository.existsById(anyLong())).thenReturn(true);
         when(bookingRepository.getBookingsOfOwnerInPast(anyLong(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(testBookingPast)));
@@ -418,7 +420,7 @@ class BookingServiceTest {
         BookingDtoOutput testBookingDtoOutputFuture = new BookingDtoOutput(1L,
                 LocalDateTime.of(2023, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2024, 2, 3, 4, 5, 6),
-                testItem, booker, State.WAITING);
+                itemOut, bookerOut, State.WAITING);
         when(bookingRepository.getBookingsOfOwnerInFuture(anyLong(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(testBookingFuture)));
         Collection<BookingDtoOutput> bookingsDtoOutputFuture =
@@ -445,7 +447,7 @@ class BookingServiceTest {
         BookingDtoOutput testBookingDtoOutputWaiting = new BookingDtoOutput(1L,
                 LocalDateTime.of(1, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2, 2, 3, 4, 5, 6),
-                testItem, booker, State.WAITING);
+                itemOut, bookerOut, State.WAITING);
         when(userRepository.existsById(anyLong())).thenReturn(true);
         when(bookingRepository.getBookingsOfOwnerAndState(anyLong(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(testBookingWaiting)));
@@ -459,7 +461,7 @@ class BookingServiceTest {
         BookingDtoOutput testBookingDtoOutputRejected = new BookingDtoOutput(1L,
                 LocalDateTime.of(2023, 2, 3, 4, 5, 6),
                 LocalDateTime.of(2024, 2, 3, 4, 5, 6),
-                testItem, booker, State.REJECTED);
+                itemOut, bookerOut, State.REJECTED);
         when(bookingRepository.getBookingsOfOwnerAndState(anyLong(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(testBookingRejected)));
         Collection<BookingDtoOutput> bookingsDtoOutputRejected =
