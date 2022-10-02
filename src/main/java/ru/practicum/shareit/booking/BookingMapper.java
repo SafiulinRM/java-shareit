@@ -27,8 +27,8 @@ public class BookingMapper {
         return new BookingDtoOutput(booking.getId(),
                 booking.getStart(),
                 booking.getEnd(),
-                booking.getItem(),
-                booking.getBooker(),
+                new BookingDtoOutput.Item(booking.getItem().getId(), booking.getItem().getName()),
+                new BookingDtoOutput.Booker(booking.getBooker().getId(), booking.getBooker().getName()),
                 booking.getState());
     }
 

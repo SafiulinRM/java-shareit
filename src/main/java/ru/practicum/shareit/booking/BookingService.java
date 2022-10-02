@@ -65,39 +65,6 @@ public class BookingService {
         return toBookingDtoOutput(newBooking);
     }
 
-    private void checkState(Booking newBooking) {
-        if (newBooking.getState().equals(State.APPROVED)) {
-            throw new ValidationException("Booking already agreed");
-        }
-    }
-
-    private void checkUserOfBooking(Booking newBooking, long userId) {
-        if (userId != newBooking.getItem().getOwner().getId() &&
-                userId != newBooking.getBooker().getId()) {
-            throw new BookingException("The user is not associated with the booking: " + userId);
-
-        }
-    }
-
-    private void setStateApprove(Booking newBooking, long userId) {
-        if (userId == newBooking.getItem().getOwner().getId()) {
-            checkState(newBooking);
-            newBooking.setState(State.APPROVED);
-        } else {
-            throw new BookingException("Booker can not approve Booking, bookerId: " + newBooking.getBooker().getId());
-        }
-    }
-
-    private void setStateRejectedOrCanceled(Booking newBooking, long userId) {
-        if (userId == newBooking.getItem().getOwner().getId()) {
-            newBooking.getItem().setAvailable(true);
-            newBooking.setState(State.REJECTED);
-        } else {
-            newBooking.getItem().setAvailable(true);
-            newBooking.setState(State.CANCELED);
-        }
-    }
-
     public BookingDtoOutput getById(long bookingId, long userId) {
         Booking newBooking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking not found " + bookingId));
@@ -188,6 +155,40 @@ public class BookingService {
     private void checkUserExist(long userId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("User not found: " + userId);
+        }
+    }
+
+
+    private void checkState(Booking newBooking) {
+        if (newBooking.getState().equals(State.APPROVED)) {
+            throw new ValidationException("Booking already agreed");
+        }
+    }
+
+    private void checkUserOfBooking(Booking newBooking, long userId) {
+        if (userId != newBooking.getItem().getOwner().getId() &&
+                userId != newBooking.getBooker().getId()) {
+            throw new BookingException("The user is not associated with the booking: " + userId);
+
+        }
+    }
+
+    private void setStateApprove(Booking newBooking, long userId) {
+        if (userId == newBooking.getItem().getOwner().getId()) {
+            checkState(newBooking);
+            newBooking.setState(State.APPROVED);
+        } else {
+            throw new BookingException("Booker can not approve Booking, bookerId: " + newBooking.getBooker().getId());
+        }
+    }
+
+    private void setStateRejectedOrCanceled(Booking newBooking, long userId) {
+        if (userId == newBooking.getItem().getOwner().getId()) {
+            newBooking.getItem().setAvailable(true);
+            newBooking.setState(State.REJECTED);
+        } else {
+            newBooking.getItem().setAvailable(true);
+            newBooking.setState(State.CANCELED);
         }
     }
 }
