@@ -26,7 +26,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleUnsupportedStateException(final UnsupportedStateException e) {
         log.warn("Unknown state: UNSUPPORTED_STATUS" + e.getMessage());
         return new ErrorResponse("Unknown state: UNSUPPORTED_STATUS", e.getMessage());
