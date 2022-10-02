@@ -21,9 +21,10 @@ public class Request {
     private Long id;
     @Column(name = "description", nullable = false, length = 4000)
     private String description;
-    @ManyToOne
-    @JoinColumn(name = "requester_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "requester_id", nullable = false)
     private User requester;
+    @Column(name = "created", nullable = false)
     private LocalDateTime created = LocalDateTime.now();
 
     public Request(Long id, String description, User requester) {
