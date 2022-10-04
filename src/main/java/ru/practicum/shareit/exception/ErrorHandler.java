@@ -1,7 +1,6 @@
 package ru.practicum.shareit.exception;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,13 +27,6 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException e) {
-        log.warn("Конфликт с базой данных" + e.getMessage());
-        return new ErrorResponse("Конфликт с базой данных", e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleUnsupportedStateException(final UnsupportedStateException e) {
         log.warn("Unknown state: UNSUPPORTED_STATUS" + e.getMessage());
         return new ErrorResponse("Unknown state: UNSUPPORTED_STATUS", e.getMessage());

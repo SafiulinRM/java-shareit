@@ -24,16 +24,15 @@ public class ItemMapper {
     }
 
     public static Item toItem(ItemDto itemDto, User owner) {
-        Item item = new Item();
-        item.setId(0);
-        item.setName(itemDto.getName());
-        item.setDescription(itemDto.getDescription());
-        item.setAvailable(itemDto.getAvailable());
-        item.setOwner(owner);
-        if (itemDto.getAvailable() != null) {
-            item.setRequestId(itemDto.getRequestId());
-        }
-        return item;
+        return new Item(itemDto.getId(),
+                itemDto.getName(),
+                itemDto.getDescription(),
+                itemDto.getAvailable(),
+                owner,
+                itemDto.getRequestId(),
+                null,
+                null,
+                null);
     }
 
     public static Item updateItem(ItemDto itemDto, long itemId) {
@@ -64,6 +63,9 @@ public class ItemMapper {
     }
 
     public static Collection<ItemDto> toItemsDto(Collection<Item> items) {
+        if (items == null) {
+            return null;
+        }
         return items.stream()
                 .map(ItemMapper::toItemDto)
                 .collect(toList());

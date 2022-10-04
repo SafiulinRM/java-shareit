@@ -9,11 +9,11 @@ import ru.practicum.shareit.item.dto.ItemDtoEnlarged;
 import ru.practicum.shareit.user.Create;
 import ru.practicum.shareit.user.Update;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
 import java.util.Collection;
 
-import static ru.practicum.shareit.item.CommentMapper.toCommentDto;
-import static ru.practicum.shareit.item.ItemMapper.*;
-
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/items")
@@ -22,36 +22,41 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDto add(@Validated({Create.class}) @RequestBody ItemDto itemDto, @RequestHeader(USER_ID_HEADER) long userId) {
-        return toItemDto(itemService.add(itemDto, userId));
+    public ItemDto add(@Validated({Create.class}) @RequestBody ItemDto itemDto,
+                       @RequestHeader(USER_ID_HEADER) long userId) {
+        return itemService.add(itemDto, userId);
     }
 
     @PatchMapping("/{itemId}")
     public ItemDto update(@Validated({Update.class}) @RequestBody ItemDto itemDto,
                           @RequestHeader(USER_ID_HEADER) long userId,
                           @PathVariable long itemId) {
-        return toItemDto(itemService.update(itemDto, userId, itemId));
+        return itemService.update(itemDto, userId, itemId);
     }
 
     @GetMapping("/{itemId}")
     public ItemDtoEnlarged getById(@PathVariable long itemId, @RequestHeader(USER_ID_HEADER) long userId) {
-        return toItemDtoEnlarged(itemService.getByItemId(itemId, userId));
+        return itemService.getByItemId(itemId, userId);
     }
 
     @GetMapping()
-    public Collection<ItemDtoEnlarged> getItemsOfOwner(@RequestHeader(USER_ID_HEADER) long ownerId) {
-        return toItemsDtoEnlarged(itemService.getItemsOfOwner(ownerId));
+    public Collection<ItemDtoEnlarged> getItemsOfOwner(@RequestHeader(USER_ID_HEADER) long ownerId,
+                                                       @RequestParam(required = false, defaultValue = "0") @Min(0L) int from,
+                                                       @RequestParam(required = false, defaultValue = "10") @Positive int size) {
+        return itemService.getItemsOfOwner(ownerId, from, size);
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> getRequestedItems(@RequestParam String text) {
-        return toItemsDto(itemService.getRequestedItems(text));
+    public Collection<ItemDto> getRequestedItems(@RequestParam String text,
+                                                 @RequestParam(required = false, defaultValue = "0") @Min(0L) int from,
+                                                 @RequestParam(required = false, defaultValue = "10") @Positive int size) {
+        return itemService.getRequestedItems(text, from, size);
     }
 
     @PostMapping("/{itemId}/comment")
     public CommentDto addComment(@PathVariable long itemId,
                                  @RequestHeader(USER_ID_HEADER) long userId,
                                  @Validated({Create.class}) @RequestBody CommentDto commentDto) {
-        return toCommentDto(itemService.addComment(itemId, userId, commentDto));
+        return itemService.addComment(itemId, userId, commentDto);
     }
 }

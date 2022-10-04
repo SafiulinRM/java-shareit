@@ -25,9 +25,11 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "author_id")
     private User author;
+    @Column(nullable = false)
     private LocalDateTime created = LocalDateTime.now();
 
-    public Comment(String text, Item item, User author) {
+    public Comment(Long id, String text, Item item, User author) {
+        this.id = id;
         this.text = text;
         this.item = item;
         this.author = author;
